@@ -1,0 +1,59 @@
+apiVersion: carto.run/v1alpha1
+kind: Workload
+metadata:
+  name: tap-test-5
+  namespace: tap-uat
+  labels:
+    apps.tanzu.vmware.com/workload-type: web
+    app.kubernetes.io/part-of: tap-test-5
+spec:
+  build:
+    env:
+    - name: BP_JVM_VERSION
+        value: "18"
+  params:
+  - name: livenessProbe
+    value:
+      httpGet:
+        path: "/livez"
+        port: 8089
+      initialDelaySeconds: "5"
+      timeoutSeconds: "1"
+  - name: readinessProbe
+    value:
+      httpGet:
+        path: "/readyz"
+        port: 8089
+      initialDelaySeconds: "5"
+      timeoutSeconds: "1"
+  - name: volumes
+    value:
+    - name: tap-registry
+      secret:
+        secretName: tap-registry
+  - name: volumeMounts
+    value:
+    - mountPath: /tmp/tap-registry
+      name: tap-registry
+  - name: buildServiceBindings
+    value:
+    - apiVersion: v1
+      kind: Secret
+      name: settings-xml
+  - name: gitops_ssh_secret
+    value: https-ca-credentials
+  - name: annotations
+    value:
+      autoscaling.knative.dev/minScale: "1"
+  resources:
+    limits:
+      cpu: 1
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 80Mi
+  source:
+    git:
+      url: https://github.com/chiupick86/tanzu-java-web-app
+      ref:
+        branch: main
